@@ -1,0 +1,394 @@
+
+Chapter3
+
+Guided Exercise: Loading the Database
+https://rol.redhat.com/rol/app/courses/do180-4.10/pages/ch03s06
+
+
+[student@workstation ~]$ lab manage-networking start
+
+Setting up workstation for the Guided Exercise: Loading the Database
+
+ · Checking podman configuration...............................  SUCCESS
+ · Creating a host directory for the database container:
+   · Adding fcontext policy for /home/student/local/mysql......  SUCCESS
+   · Creating the /home/student/local/mysql directory..........  SUCCESS
+   · Apply fcontext policy to /home/student/local/mysql........  SUCCESS
+   · Change owner of the /home/student/local/mysql to the mysql  SUCCESS
+Exercise is already setup.
+
+
+[student@workstation ~]$ podman run --name mysqldb-port -d -v /home/student/local/mysql:/var/lib/mysql/data -p 13306:3306 -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 registry.access.redhat.com/rhscl/mysql-80-rhel7
+9ae5788f36a6b56431aa1b4db310c0a243cc33cfc21b3c0c62a0d2d17515b672
+
+
+[student@workstation ~]$ p ps
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED        STATUS            PORTS                    NAMES
+9ae5788f36a6  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  9 seconds ago  Up 9 seconds ago  0.0.0.0:13306->3306/tcp  mysqldb-port
+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items < /home/student/DO180/labs/manage-networking/db.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+
+[student@workstation ~]$ p exec -it mysqldb-port mysql -uroot items -e "SELECT * FROM Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+
+[student@workstation ~]$ p exec -it mysqldb-port mysql -uroot items -e "DESCRIBE Item"
++-------------+--------------+------+-----+---------+----------------+
+| Field       | Type         | Null | Key | Default | Extra          |
++-------------+--------------+------+-----+---------+----------------+
+| id          | bigint       | NO   | PRI | NULL    | auto_increment |
+| description | varchar(100) | YES  |     | NULL    |                |
+| done        | int          | YES  |     | NULL    |                |
++-------------+--------------+------+-----+---------+----------------+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items -e "SELECT * from Item"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+
+[student@workstation ~]$ podman exec -it mysqldb-port /bin/bash
+bash-4.2$ 
+
+bash-4.2$ mysql -uroot items -e "SELECT * from Item"
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+
+
+[student@workstation ~]$ lab manage-networking finish
+
+Completing the Guided Exercise: Loading the Database
+
+ · Stopping the 'mysqldb-port' container.......................  SUCCESS
+ · Removing the 'mysqldb-port' container.......................  SUCCESS
+ · Removing the 'registry.redhat.io/rhel8/mysql-80:1' image....  SUCCESS
+ · Removing the /home/student/local/mysql directory............  SUCCESS
+ · Removing the fcontext for /home/student/local/mysql.........  SUCCESS
+[student@workstation ~]$ 
+
+
+
+########################################################################
+https://rol.redhat.com/rol/app/courses/do180-4.10/pages/ch03s07
+Lab: Managing Containers
+########################################################################
+
+
+[student@workstation ~]$ lab manage-review start
+
+Setting up workstation for the Lab: Managing Containers
+
+ · Checking podman configuration...............................  SUCCESS
+ · Check that /home/student/local/mysql does not exist.........  SUCCESS
+ · Downloading starter project.................................  SUCCESS
+ · Downloading solution project................................  SUCCESS
+
+Setup successful. Please proceed with the exercise.
+
+
+[student@workstation ~]$ mkdir -pv /home/student/local/mysql
+mkdir: created directory '/home/student/local'
+mkdir: created directory '/home/student/local/mysql'
+
+[student@workstation ~]$ sudo semanage fcontext -a -t container_file_t '/home/student/local/mysql(/.*)?'
+
+[student@workstation ~]$ ls -ldZ /home/student/local/mysql/
+drwxrwxr-x. 2 student student unconfined_u:object_r:user_home_t:s0 6 Apr  6 09:18 /home/student/local/mysql/
+ 
+[student@workstation ~]$ sudo restorecon -R /home/student/local/mysql
+
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED       SIZE
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago   507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago   329 MB
+
+[student@workstation ~]$ podman run -d --name mysql-1 -v /home/student/local/mysql:/var/lib/mysql/data -p 13306:3306 -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 registry.access.redhat.com/rhscl/mysql-80-rhel7
+92e66ddeb652039d918034c81727725bb49c5fd4cfa3559b1a336809c1bb9908
+
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED        STATUS            PORTS                    NAMES
+92e66ddeb652  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  6 minutes ago  Up 6 minutes ago  0.0.0.0:13306->3306/tcp  mysql-1
+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items < /home/student/DO180/labs/manage-review/db.sql 
+mysql: [Warning] Using a password on the command line interface can be insecure.
+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items -e "SHOW tables"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+
+| Tables_in_items |
++-----------------+
+| Item            |
++-----------------+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items -e "SELECT * FROM Item"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+
+[student@workstation ~]$ podman stop mysql-1 
+92e66ddeb652039d918034c81727725bb49c5fd4cfa3559b1a336809c1bb9908
+
+[student@workstation ~]$ podman run -d --name mysql-2 -v /home/student/local/mysql:/var/lib/mysql/data -p 13306:3306 -e MYSQL_USER=user1 -e MYSQL_PASSWORD=mypa55 -e MYSQL_DATABASE=items -e MYSQL_ROOT_PASSWORD=r00tpa55 registry.access.redhat.com/rhscl/mysql-80-rhel7
+8390c4bccfe738ec9d7cd23148b8d915970e49f31d43f21a32928311a5b647ff
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ date; sudo ls -ltr /home/student/local/mysql/items/
+Wed Apr  6 09:47:24 EDT 2022
+total 112
+-rw-r-----. 1 100026 100026 114688 Apr  6 09:40 Item.ibd
+[student@workstation ~]$ 
+[student@workstation ~]$ date; sudo ls -ltr /home/student/local/mysql/
+Wed Apr  6 09:47:29 EDT 2022
+total 106960
+-rw-r-----. 1 100026 100026       56 Apr  6 09:34  auto.cnf
+drwxr-x---. 2 100026 100026     8192 Apr  6 09:34  performance_schema
+-rw-------. 1 100026 100026     1676 Apr  6 09:34  ca-key.pem
+-rw-r--r--. 1 100026 100026     1112 Apr  6 09:34  ca.pem
+-rw-------. 1 100026 100026     1680 Apr  6 09:34  server-key.pem
+-rw-r--r--. 1 100026 100026     1112 Apr  6 09:34  server-cert.pem
+-rw-------. 1 100026 100026     1676 Apr  6 09:34  client-key.pem
+-rw-r--r--. 1 100026 100026     1112 Apr  6 09:34  client-cert.pem
+-rw-r--r--. 1 100026 100026      452 Apr  6 09:34  public_key.pem
+-rw-------. 1 100026 100026     1676 Apr  6 09:34  private_key.pem
+drwxr-x---. 2 100026 100026      143 Apr  6 09:34  mysql
+drwxr-x---. 2 100026 100026       28 Apr  6 09:35  sys
+-rw-r-----. 1 100026 100026  8388608 Apr  6 09:35  ib_logfile1
+-rw-r--r--. 1 100026 100026        7 Apr  6 09:35  mysql_upgrade_info
+-rw-r-----. 1 100026 100026  8585216 Apr  6 09:35 '#ib_16384_1.dblwr'
+-rw-r-----. 1 100026 100026     3132 Apr  6 09:35  binlog.000001
+drwxr-x---. 2 100026 100026       22 Apr  6 09:40  items
+-rw-r-----. 1 100026 100026     1079 Apr  6 09:41  binlog.000002
+-rw-r-----. 1 100026 100026     1440 Apr  6 09:47  binlog.000003
+-rw-r-----. 1 100026 100026     3453 Apr  6 09:47  ib_buffer_pool
+drwxr-x---. 2 100026 100026      187 Apr  6 09:47 '#innodb_temp'
+-rw-r-----. 1 100026 100026       64 Apr  6 09:47  binlog.index
+-rw-r-----. 1 100026 100026      156 Apr  6 09:47  binlog.000004
+-rw-r-----. 1 100026 100026        2 Apr  6 09:47  8390c4bccfe7.pid
+-rw-r-----. 1 100026 100026 12582912 Apr  6 09:47  ibtmp1
+-rw-r-----. 1 100026 100026 12582912 Apr  6 09:47  ibdata1
+-rw-r-----. 1 100026 100026 16777216 Apr  6 09:47  undo_002
+-rw-r-----. 1 100026 100026 25165824 Apr  6 09:47  mysql.ibd
+-rw-r-----. 1 100026 100026   196608 Apr  6 09:47 '#ib_16384_0.dblwr'
+-rw-r-----. 1 100026 100026 16777216 Apr  6 09:47  undo_001
+-rw-r-----. 1 100026 100026  8388608 Apr  6 09:47  ib_logfile0
+
+
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED             STATUS                    PORTS                    NAMES
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  About a minute ago  Up About a minute ago     0.0.0.0:13306->3306/tcp  mysql-2
+92e66ddeb652  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  13 minutes ago      Exited (0) 6 minutes ago  0.0.0.0:13306->3306/tcp  mysql-1
+
+[student@workstation ~]$ podman ps -a > /tmp/my-containers
+
+[student@workstation ~]$ podman exec -it mysql-2 /bin/bash
+bash-4.2$ 
+
+bash-4.2$ mysql -uroot                         
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 12
+Server version: 8.0.26 Source distribution
+
+Copyright (c) 2000, 2021, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| items              |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+5 rows in set (0.01 sec)
+
+mysql> use items;
+Database changed
+mysql> show tables;
++-----------------+
+| Tables_in_items |
++-----------------+
+| Item            |
++-----------------+
+1 row in set (0.01 sec)
+
+mysql> select * from Item;
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+2 rows in set (0.01 sec)
+
+mysql> exit
+Bye
+bash-4.2$ 
+
+bash-4.2$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P3306 items -e "SELECT * from Item"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+bash-4.2$ 
+bash-4.2$ exit
+exit
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items -e "SHOW tables"
+mysql: [Warning] Using a password on the command line interface can be insecure.
++-----------------+
+| Tables_in_items |
++-----------------+
+| Item            |
++-----------------+
+
+
+[student@workstation ~]$ mysql -uuser1 -pmypa55 -h 127.0.0.1 -P13306 items
+mysql: [Warning] Using a password on the command line interface can be insecure.
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 16
+Server version: 8.0.26 Source distribution
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> show tables;
++-----------------+
+| Tables_in_items |
++-----------------+
+| Item            |
++-----------------+
+1 row in set (0.00 sec)
+
+mysql> 
+mysql> select * from Item;
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
++----+-------------------+------+
+2 rows in set (0.00 sec)
+
+
+mysql> insert into Item (description, done) values ('Finished lab', 1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from Item;
++----+-------------------+------+
+| id | description       | done |
++----+-------------------+------+
+|  1 | Pick up newspaper |    0 |
+|  2 | Buy groceries     |    1 |
+|  3 | Finished lab      |    1 |
++----+-------------------+------+
+3 rows in set (0.00 sec)
+
+mysql> exit
+Bye
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED         STATUS                     PORTS                    NAMES
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  16 minutes ago  Up 16 minutes ago          0.0.0.0:13306->3306/tcp  mysql-2
+92e66ddeb652  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  28 minutes ago  Exited (0) 21 minutes ago  0.0.0.0:13306->3306/tcp  mysql-1
+
+[student@workstation ~]$ podman rm mysql-1 
+92e66ddeb652039d918034c81727725bb49c5fd4cfa3559b1a336809c1bb9908
+
+
+[student@workstation ~]$ lab manage-review grade
+
+Grading the student's work for the Lab: Managing Containers
+
+ · Checking if the /home/student/local/mysql folder exists.....  PASS
+ · Checking if owner was changed...............................  PASS
+ · Checking if the container mysql-1 was created...............  PASS
+ · Checking if the mysql-2 container is running................  PASS
+ · Checking tables for the 'Finished lab' row..................  PASS
+[student@workstation ~]$ 
+
+[student@workstation ~]$ tree /home/student/DO180/labs/
+/home/student/DO180/labs/
+├── manage-networking
+│   └── db.sql
+└── manage-review
+    └── db.sql
+
+2 directories, 2 files
+
+[student@workstation ~]$ tree /home/student/DO180/solutions/
+/home/student/DO180/solutions/
+├── container-create
+│   └── create_table.txt
+├── manage-networking
+│   └── db.sql
+└── manage-review
+    └── db.sql
+
+3 directories, 3 files
+
+
+[student@workstation ~]$ cat /home/student/DO180/solutions/container-create/create_table.txt 
+CREATE TABLE Projects (id int NOT NULL, name varchar(255) DEFAULT NULL, code varchar(255) DEFAULT NULL, PRIMARY KEY (id));
+
+[student@workstation ~]$ cat /home/student/DO180/solutions/manage-networking/db.sql 
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+
+[student@workstation ~]$ cat /home/student/DO180/solutions/manage-review/db.sql 
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+
+[student@workstation ~]$ cat /home/student/DO180/labs/manage-networking/db.sql 
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+[student@workstation ~]$ 
+[student@workstation ~]$ cat /home/student/DO180/labs/manage-review/db.sql 
+CREATE TABLE `Item` (`id` BIGINT not null auto_increment primary key, `description` VARCHAR(100), `done` INT);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (1,'Pick up newspaper', 0);
+INSERT INTO `Item` (`id`,`description`,`done`) VALUES (2,'Buy groceries', 1);
+
+
+
+
