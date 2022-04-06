@@ -1,0 +1,45 @@
+[student@workstation ~]$ lab-configure
+
+This script configures the connection parameters to access the OpenShift cluster for your lab scripts
+
+ · Enter the API Endpoint: https://api.eu46a.prod.ole.redhat.com:6443
+ · Enter the Username: lfzwkx
+ · Enter the Password: 6c0e80ba22a64e7eb9aa
+ · Enter the GitHub Account Name: cuongtrinh-github
+ · Enter the Quay.io Account Name: cuong_trinh
+
+You entered:
+ · API Endpoint:			https://api.eu46a.prod.ole.redhat.com:6443
+ · Username:				lfzwkx
+ · Password:				6c0e80ba22a64e7eb9aa
+ · GitHub Account Name:			cuongtrinh-github
+ · Quay.io Account Name:		cuong_trinh
+
+Generated config:
+ · API Endpoint:			https://api.eu46a.prod.ole.redhat.com:6443
+ · Wildcard Domain:			apps.eu46a.prod.ole.redhat.com
+ · Nexus Server Host:			nexus-common.apps.eu46a.prod.ole.redhat.com
+ · Username:				lfzwkx
+ · Password:				6c0e80ba22a64e7eb9aa
+ · GitHub Account Name:			cuongtrinh-github
+ · Quay.io Account Name:		cuong_trinh
+
+Verifying your API Endpoint...
+
+Verifying your Nexus host...
+
+Verifying your OpenShift developer user credentials...
+
+Verifying your GitHub account name...
+
+Verifying your Quay.io account name...
+
+Verifying your cluster configuration...
+
+Saving your lab configuration file...
+
+All fine, lab config saved. You can now proceed with your exercises.
+
+If you need to modify the configuration, rerun this script or directly modify the values in /usr/local/etc/ocp4.config.
+
+

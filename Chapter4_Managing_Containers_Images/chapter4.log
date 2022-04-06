@@ -1,0 +1,807 @@
+###Chapter 4. Managing Container Images###
+
+https://rol.redhat.com/rol/app/courses/do180-4.10/pages/ch04
+
+[student@workstation Chapter4_Managing_Containers_Images]$ grep registries /etc/containers/registries.conf
+
+# For more information on this configuration file, see containers-registries.conf(5).
+# intended content. Red Hat recommends only adding registries which are completely trusted, i.e. registries
+# registries, it should be added at the end of the list.
+# The following registries are a set of secure defaults provided by Red Hat.
+# Each of these registries provides container images curated, patched
+[registries.search]
+registries = ["registry.access.redhat.com", "quay.io"]
+# The following registries entry can be used for convenience but includes
+#registries = ['registry.access.redhat.com', 'registry.redhat.io', 'docker.io', 'quay.io']
+[registries.insecure]
+registries = []
+# "*", then the docker daemon will only be allowed to pull from registries listed above in the search
+# registries.  Blocked Registries is deprecated because other container runtimes and tools will not use it.
+# registries you want to allow users to pull and push from.  policy.json gives greater flexibility, and
+[registries.block]
+registries = []
+# # An array of host[:port] registries to try when pulling an unqualified image, in order.
+# unqualified-search-registries = ["example.com"]
+
+
+
+
+
+[student@workstation ~]$ lab image-operations start
+
+Setting up workstation for the GE: Creating a Custom Apache Container Image
+
+ · Checking podman configuration...............................  SUCCESS
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman login quay.io
+Username: cuong_trinh
+Password: 
+Error: error logging into "quay.io": invalid username/password
+[student@workstation ~]$ podman login quay.io
+Username: cuong.trinh@telekom.de
+Password: 
+Error: error logging into "quay.io": invalid username/password
+[student@workstation ~]$ podman login quay.io
+Username: cuong_trinh
+Password: 
+Login Succeeded!
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run -d --name offical-httpd -p 8180:80 quay.io/redhattraining/httpd-parent
+Trying to pull quay.io/redhattraining/httpd-parent...
+Getting image source signatures
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 done
+Copying blob 6a5240d60dc4 done
+Copying blob 787f47dbeaac done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob a3ed95caeb02 done
+Copying blob a3ed95caeb02 skipped: already exists
+Copying blob 08b8c9fdec44 done
+Copying blob 408208567b9a done
+Writing manifest to image destination
+Storing signatures
+8a08f1a41baa0b4c2f414741159fdbf1994121b90104222f68a4e164395a48e0
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS             PORTS                    NAMES
+8a08f1a41baa  quay.io/redhattraining/httpd-parent:latest              /bin/sh -c /usr/s...  45 seconds ago  Up 45 seconds ago  0.0.0.0:8180->80/tcp     offical-httpd
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            6 hours ago     Up 6 hours ago     0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman exec -it offical-httpd /bin/bash
+bash-4.4# echo "DO180 Page" > /var/www/html/do180.html
+bash-4.4# exit
+exit
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl 
+curl: try 'curl --help' or 'curl --manual' for more information
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl 127.0.0.1:8180/do180.html
+DO180 Page
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman diff offical-httpd 
+C /root
+A /root/.bash_history
+C /var
+C /var/www
+C /var/www/html
+A /var/www/html/do180.html
+C /var/log
+C /var/log/httpd
+A /var/log/httpd/access_log
+A /var/log/httpd/error_log
+C /run/httpd
+A /run/httpd/cgisock.1
+A /run/httpd/httpd.pid
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman stop offical-httpd 
+8a08f1a41baa0b4c2f414741159fdbf1994121b90104222f68a4e164395a48e0
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit 
+mysql-2        offical-httpd  
+[student@workstation ~]$ podman commit -a 'Cuong Trinh' official-httpd do180-custom-httpd
+Error: error looking up container "official-httpd": no container with name or ID official-httpd found: no such container
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -a 'Cuong Trinh' offical-httpd do180-custom-httpd
+Getting image source signatures
+Copying blob 24d85c895b6b skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying blob 574bcc187eda skipped: already exists
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob 6a26b9d44ceb done
+Copying config 364499c0e3 done
+Writing manifest to image destination
+Storing signatures
+364499c0e3460276170360f4261434c867eaf6dfc082512226ea743c781a7c40
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED          SIZE
+localhost/do180-custom-httpd                      latest   364499c0e346   25 seconds ago   236 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/httpd-parent               latest   4346d3cace25   2 years ago      236 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ source /usr/local/etc/ocp4.config 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman tag do180-custom-httpd quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED         SIZE
+localhost/do180-custom-httpd                      latest   364499c0e346   3 minutes ago   236 MB
+quay.io/cuong_trinh/do180-custom-httpd            v1.0     364499c0e346   3 minutes ago   236 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/httpd-parent               latest   4346d3cace25   2 years ago     236 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ podman push quay.io/${RHT_OCP4_QUAY_USER}/do180-custom-httpd:v1.0
+Getting image source signatures
+Copying blob 6a26b9d44ceb done
+Copying blob 574bcc187eda skipped: already exists
+Copying blob 7f9108fde4a1 skipped: already exists
+Copying blob 24d85c895b6b skipped: already exists
+Copying blob c613b100be16 skipped: already exists
+Copying config 364499c0e3 done
+Writing manifest to image destination
+Storing signatures
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman search quay.io/do180-custom-httpd
+INDEX     NAME                                                  DESCRIPTION                                       STARS   OFFICIAL   AUTOMATED
+quay.io   quay.io/centos7/httpd-24-centos7                      Apache httpd 2.4 available as container, is ...   0                  
+quay.io   quay.io/acm-d/acm-custom-registry                                                                       0                  
+quay.io   quay.io/stolostron/acm-custom-registry                                                                  0                  
+quay.io   quay.io/stolostron/cmb-custom-registry                                                                  0                  
+quay.io   quay.io/open-cluster-management/acm-custom-registry                                                     0                  
+quay.io   quay.io/acm-d/mce-custom-registry                                                                       0                  
+quay.io   quay.io/app-sre/custom-domains-operator               main custom-domains-operator container            0                  
+quay.io   quay.io/app-sre/custom-domains-operator-registry      custom-domains-operator-registry for olm cat...   0                  
+quay.io   quay.io/fairwinds/custom-metrics                                                                        0                  
+quay.io   quay.io/coreos/dnsmasq                                Convenience entrypoint to [dnsmasq](http://w...   0                  
+quay.io   quay.io/achieris/do180-quote-php                                                                        0                  
+quay.io   quay.io/sjenning/httpd                                                                                  0                  
+quay.io   quay.io/redhattraining/httpd-parent                                                                     0                  
+quay.io   quay.io/tike/openshift-sp-httpd                       This is the httpd half of an Openshift-ready...   0                  
+quay.io   quay.io/open-cluster-management/cmb-custom-registry                                                     0                  
+quay.io   quay.io/bitnami/postgresql                            Official build of [Bitnami PostgreSQL](https...   0                  
+quay.io   quay.io/prsurve/httpd-download                                                                          0                  
+quay.io   quay.io/redhattraining/do180-todonodejs-12                                                              0                  
+quay.io   quay.io/bitnami/mongodb                               Official build of [Bitnami MongoDB](https://...   0                  
+quay.io   quay.io/chidanandbh/mce-custom-registry                                                                 0                  
+quay.io   quay.io/jbisson/ubi-base-httpd                                                                          0                  
+quay.io   quay.io/fivium/httpd                                                                                    0                  
+quay.io   quay.io/ml-aml-workshop/airflow-custom                                                                  0                  
+quay.io   quay.io/jdiaz/custom-release                                                                            0                  
+quay.io   quay.io/bitnami/redis                                 Official build of [Bitnami Redis](https://gi...   0                  
+[student@workstation ~]$ 
+
+[student@workstation ~]$ podman pull quay.io/cuong_trinh/do180-custom-httpd:v1.0
+Trying to pull quay.io/cuong_trinh/do180-custom-httpd:v1.0...
+Getting image source signatures
+Copying blob 49dfa7b2d451 skipped: already exists
+Copying blob 787f47dbeaac skipped: already exists
+Copying blob 6a5240d60dc4 skipped: already exists
+Copying blob 08b8c9fdec44 skipped: already exists
+Copying blob 408208567b9a skipped: already exists
+Copying config 364499c0e3 done
+Writing manifest to image destination
+Storing signatures
+364499c0e3460276170360f4261434c867eaf6dfc082512226ea743c781a7c40
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED          SIZE
+quay.io/cuong_trinh/do180-custom-httpd            v1.0     364499c0e346   10 minutes ago   236 MB
+localhost/do180-custom-httpd                      latest   364499c0e346   10 minutes ago   236 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/httpd-parent               latest   4346d3cace25   2 years ago      236 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman pull -q quay.io/cuong_trinh/do180-custom-httpd:v1.0
+364499c0e3460276170360f4261434c867eaf6dfc082512226ea743c781a7c40
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman pull -h 
+Pull an image from a registry
+
+Description:
+  Pulls an image from a registry and stores it locally.
+
+  An image can be pulled using its tag or digest. If a tag is not specified, the image with the 'latest' tag (if it exists) is pulled.
+
+Usage:
+  podman pull [flags] IMAGE-PATH
+
+Examples:
+  podman pull imageName
+  podman pull fedora:latest
+  podman pull --cert-dir image/certs --authfile temp-auths/myauths.json docker://docker.io/myrepo/finaltest
+
+Flags:
+      --all-tags            All tagged images in the repository will be pulled
+      --authfile string     Path of the authentication file. Use REGISTRY_AUTH_FILE environment variable to override (default "/run/user/1000/containers/auth.json")
+      --cert-dir Pathname   Pathname of a directory containing TLS certificates and keys
+      --creds Credentials   Credentials (USERNAME:PASSWORD) to use for authenticating to a registry
+  -q, --quiet               Suppress output information when pulling images
+      --tls-verify          Require HTTPS and verify certificates when contacting registries (default true)
+
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED          SIZE
+quay.io/cuong_trinh/do180-custom-httpd            v1.0     364499c0e346   11 minutes ago   236 MB
+localhost/do180-custom-httpd                      latest   364499c0e346   11 minutes ago   236 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/httpd-parent               latest   4346d3cace25   2 years ago      236 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run -d --name test-httpd -p 8280:80 quay.io/cuong_trinh/do180-custom-httpd:v1.0
+fc84147ef9467e6b32c16037b94629b4e60df5848a6d046defe1f96c083a72d7
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED        STATUS            PORTS                    NAMES
+fc84147ef946  quay.io/cuong_trinh/do180-custom-httpd:v1.0             /bin/sh -c /usr/s...  6 seconds ago  Up 5 seconds ago  0.0.0.0:8280->80/tcp     test-httpd
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            6 hours ago    Up 6 hours ago    0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl http://localhost:8280/do180.html
+DO180 Page
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ lab image-operations finish
+
+Completing the GE: Creating a Custom Apache Container Image
+
+ · Stopping official-httpd container...........................  SUCCESS
+ · Removing official-httpd container...........................  SUCCESS
+ · Stopping test-httpd container...............................  SUCCESS
+ · Removing test-httpd container...............................  SUCCESS
+ · Removing redhattraining/httpd-parent image..................  SUCCESS
+ · Removing quay.io/cuong_trinh/do180-custom-httpd image.......  SUCCESS
+ · Removing localhost/do180-custom-httpd image.................  SUCCESS
+[student@workstation ~]$ 
+
+
+[student@workstation ~]$ lab image-review start
+
+Setting up workstation for the Lab: Managing Images
+
+ · Checking podman configuration...............................  SUCCESS
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ ls -ltr
+total 4
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Videos
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Templates
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Public
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Pictures
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Music
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Downloads
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Documents
+drwxr-xr-x. 2 student student   6 Apr  4 10:21 Desktop
+drwxrwxr-x. 9 student student 168 Apr  4 10:33 DO180-apps
+-rw-rw-r--. 1 student student  21 Apr  5 06:40 v4.6.log
+drwxr-xr-x. 4 root    root     35 Apr  6 08:31 DO180
+drwxrwxr-x. 3 student student  19 Apr  6 09:18 local
+drwxrwxr-x. 5 student student 150 Apr  6 12:32 DO180-excercise
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman search quay.io/nginx
+INDEX     NAME                                                                   DESCRIPTION                                       STARS   OFFICIAL   AUTOMATED
+quay.io   quay.io/kubernetes-ingress-controller/nginx-ingress-controller         NGINX Ingress controller built around the [K...   0                  
+quay.io   quay.io/opencloudio/ibm-ingress-nginx-operator                         # IBM Ingress Nginx Operator  **Important:**...   0                  
+quay.io   quay.io/centos7/nginx-116-centos7                                      Nginx is a web server and a reverse proxy se...   0                  
+quay.io   quay.io/bitnami/nginx                                                  Official build of [Bitnami nginx](https://gi...   0                  
+quay.io   quay.io/ukhomeofficedigital/nginx-proxy                                # OpenResty Docker Container  [![Build Statu...   0                  
+quay.io   quay.io/openshift-scale/nginx                                                                                            0                  
+quay.io   quay.io/jitesoft/nginx                                                 # Nginx  [![Docker Pulls](https://img.shield...   0                  
+quay.io   quay.io/ocsci/nginx                                                                                                      0                  
+quay.io   quay.io/redhattraining/hello-world-nginx                                                                                 0                  
+quay.io   quay.io/bitnami/nginx-ingress-controller                               Official build of [Bitnami CONTAINERNAME](ht...   0                  
+quay.io   quay.io/bitnami/nginx-exporter                                                                                           0                  
+quay.io   quay.io/opencloudio/nginx-ingress-controller                                                                             0                  
+quay.io   quay.io/infrabox/docker-registry-nginx                                                                                   0                  
+quay.io   quay.io/openshifttest/nginx-alpine                                                                                       0                  
+quay.io   quay.io/opencloudio/icp4data-nginx-repo                                                                                  0                  
+quay.io   quay.io/testing-farm/nginx                                             Mirror of `docker.io/nginx/nginx` images, to...   0                  
+quay.io   quay.io/aptible/nginx                                                  ![](https://quay.io/repository/aptible/nginx...   0                  
+quay.io   quay.io/dtan4/nginx-basic-auth-proxy                                                                                     0                  
+quay.io   quay.io/kubernetes-ingress-controller/nginx-ingress-controller-amd64   NGINX Ingress controller built around the [K...   0                  
+quay.io   quay.io/bedrock/nginx                                                                                                    0                  
+quay.io   quay.io/ekimekim/wubloader-nginx                                                                                         0                  
+quay.io   quay.io/opencloudio/ibm-ingress-nginx-operator-bundle                                                                    0                  
+quay.io   quay.io/linuxserver.io/baseimage-alpine-nginx                                                                            0                  
+quay.io   quay.io/opentelekomcloud/nginx-unprivileged                                                                              0                  
+quay.io   quay.io/sjenning/nginx                                                                                                   0                  
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman search quay.io/nginx |grep redhattraining
+quay.io   quay.io/redhattraining/hello-world-nginx                                                                                 0                  
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman search nginx 
+INDEX        NAME                                                                   DESCRIPTION                                       STARS   OFFICIAL   AUTOMATED
+redhat.com   registry.access.redhat.com/ubi8/nginx-120                              Platform for running nginx 1.20 or building ...   0                  
+redhat.com   registry.access.redhat.com/ubi8/nginx-118                              Platform for running nginx 1.18 or building ...   0                  
+redhat.com   registry.access.redhat.com/rhscl/nginx-18-rhel7                        Nginx 1.8 server and a reverse proxy server       0                  
+redhat.com   registry.access.redhat.com/rhscl/nginx-112-rhel7                       Nginx is a web server and a reverse proxy se...   0                  
+redhat.com   registry.access.redhat.com/rhscl/nginx-110-rhel7                       Nginx container image that delivers an nginx...   0                  
+redhat.com   registry.access.redhat.com/rhscl/nginx-16-rhel7                        Nginx 1.6 server and a reverse proxy server       0                  
+redhat.com   registry.access.redhat.com/rhscl/nginx-114-rhel7                       Nginx is a web server and a reverse proxy se...   0                  
+redhat.com   registry.access.redhat.com/ubi7/nginx-118                              Platform for running nginx 1.18 or building ...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp23/apicast-gateway                 3scale's API gateway (APIcast) is an OpenRe...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp20/apicast-gateway                3scale's API gateway (APIcast) is an OpenRes...   0                  
+redhat.com   registry.access.redhat.com/rhamp10/apicast-gateway                     3scale's API gateway (APIcast) is an OpenRes...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp20-beta/apicast-gateway           3scale's API gateway (APIcast) is an OpenRes...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp25/apicast-gateway                3scale's API gateway (APIcast) is an OpenRes...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp21/apicast-gateway                3scale AMP image used for API gateway             0                  
+redhat.com   registry.access.redhat.com/3scale-amp24/apicast-gateway                No description                                    0                  
+redhat.com   registry.access.redhat.com/rhmap45/wildcard-proxy                      RHMAP image that provides mapping and proxy ...   0                  
+redhat.com   registry.access.redhat.com/rhmap46/wildcard-proxy                      RHMAP image that provides mapping and proxy ...   0                  
+redhat.com   registry.access.redhat.com/rhmap47/wildcard-proxy                      RHMAP image that provides mapping and proxy ...   0                  
+redhat.com   registry.access.redhat.com/rhmap43/wildcard-proxy                      RHMAP Docker image that provides mapping and...   0                  
+redhat.com   registry.access.redhat.com/rhmap44/wildcard-proxy                      RHMAP Docker image that provides mapping and...   0                  
+redhat.com   registry.access.redhat.com/3scale-amp22/apicast-gateway                APIcast API gateway needs connection to the ...   0                  
+quay.io      quay.io/kubernetes-ingress-controller/nginx-ingress-controller         NGINX Ingress controller built around the [K...   0                  
+quay.io      quay.io/opencloudio/ibm-ingress-nginx-operator                         # IBM Ingress Nginx Operator  **Important:**...   0                  
+quay.io      quay.io/centos7/nginx-116-centos7                                      Nginx is a web server and a reverse proxy se...   0                  
+quay.io      quay.io/bitnami/nginx                                                  Official build of [Bitnami nginx](https://gi...   0                  
+quay.io      quay.io/ukhomeofficedigital/nginx-proxy                                # OpenResty Docker Container  [![Build Statu...   0                  
+quay.io      quay.io/openshift-scale/nginx                                                                                            0                  
+quay.io      quay.io/jitesoft/nginx                                                 # Nginx  [![Docker Pulls](https://img.shield...   0                  
+quay.io      quay.io/ocsci/nginx                                                                                                      0                  
+quay.io      quay.io/redhattraining/hello-world-nginx                                                                                 0                  
+quay.io      quay.io/bitnami/nginx-ingress-controller                               Official build of [Bitnami CONTAINERNAME](ht...   0                  
+quay.io      quay.io/bitnami/nginx-exporter                                                                                           0                  
+quay.io      quay.io/opencloudio/nginx-ingress-controller                                                                             0                  
+quay.io      quay.io/infrabox/docker-registry-nginx                                                                                   0                  
+quay.io      quay.io/openshifttest/nginx-alpine                                                                                       0                  
+quay.io      quay.io/opencloudio/icp4data-nginx-repo                                                                                  0                  
+quay.io      quay.io/testing-farm/nginx                                             Mirror of `docker.io/nginx/nginx` images, to...   0                  
+quay.io      quay.io/aptible/nginx                                                  ![](https://quay.io/repository/aptible/nginx...   0                  
+quay.io      quay.io/dtan4/nginx-basic-auth-proxy                                                                                     0                  
+quay.io      quay.io/kubernetes-ingress-controller/nginx-ingress-controller-amd64   NGINX Ingress controller built around the [K...   0                  
+quay.io      quay.io/bedrock/nginx                                                                                                    0                  
+quay.io      quay.io/ekimekim/wubloader-nginx                                                                                         0                  
+quay.io      quay.io/opencloudio/ibm-ingress-nginx-operator-bundle                                                                    0                  
+quay.io      quay.io/linuxserver.io/baseimage-alpine-nginx                                                                            0                  
+quay.io      quay.io/opentelekomcloud/nginx-unprivileged                                                                              0                  
+quay.io      quay.io/sjenning/nginx                                                                                                   0                  
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman pull quay.io/redhattraining/nginx:1.17
+Trying to pull quay.io/redhattraining/nginx:1.17...
+Getting image source signatures
+Copying blob d1a81ca518e2 done
+Copying blob c78335199707 done
+Copying blob b00ee4473ca6 done
+Copying config 9beeba249f done
+Writing manifest to image destination
+Storing signatures
+9beeba249f3ee158d3e495a6ac25c5667ae2de8a43ac2a8bfd2bf687a58c06c9
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED      STATUS          PORTS                    NAMES
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  6 hours ago  Up 6 hours ago  0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED         SIZE
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/nginx                      1.17     9beeba249f3e   23 months ago   131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run -d --name offical-nginx -p 8080:80 quay.io/redhattraining/nginx
+Trying to pull quay.io/redhattraining/nginx...
+  manifest unknown: manifest unknown
+Error: unable to pull quay.io/redhattraining/nginx: unable to pull image: Error initializing source docker://quay.io/redhattraining/nginx:latest: Error reading manifest latest in quay.io/redhattraining/nginx: manifest unknown: manifest unknown
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run -d --name offical-nginx -p 8080:80 quay.io/redhattraining/nginx:1.17 
+f52742a81b244464b9e2914d776b9da94ee72331dd09fe2e4fd8259eeca8a0c6
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED        STATUS            PORTS                    NAMES
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  5 seconds ago  Up 4 seconds ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            6 hours ago    Up 6 hours ago    0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl localhost:8080
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman exec -it offical-nginx /bin/bash
+root@f52742a81b24:/# 
+root@f52742a81b24:/# 
+root@f52742a81b24:/# echo "DO180" > /usr/share/nginx/html/
+50x.html    index.html  
+root@f52742a81b24:/# echo "DO180" > /usr/share/nginx/html/
+50x.html    index.html  
+root@f52742a81b24:/# echo "DO180" > /usr/share/nginx/html/index.html 
+root@f52742a81b24:/# 
+root@f52742a81b24:/# 
+root@f52742a81b24:/# exit
+exit
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl localhost:8080
+DO180
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED        STATUS            PORTS                    NAMES
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  3 minutes ago  Up 3 minutes ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            6 hours ago    Up 6 hours ago    0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman stop offical-nginx 
+f52742a81b244464b9e2914d776b9da94ee72331dd09fe2e4fd8259eeca8a0c6
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podmann diff offical-nginx
+bash: podmann: command not found...
+Similar command is: 'podman'
+[student@workstation ~]$ podman diff offical-nginx
+C /root
+A /root/.bash_history
+C /usr
+C /usr/share
+C /usr/share/nginx
+C /usr/share/nginx/html
+C /usr/share/nginx/html/index.html
+C /etc
+C /var
+C /var/cache
+C /var/cache/nginx
+A /var/cache/nginx/fastcgi_temp
+A /var/cache/nginx/proxy_temp
+A /var/cache/nginx/scgi_temp
+A /var/cache/nginx/uwsgi_temp
+A /var/cache/nginx/client_temp
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -m 'Cuong Trinh' offical-nginx-dev do180/mynginx:v1.0-SANPSHOT 
+Error: messages are only compatible with the docker image format (-f docker)
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -m -a 'Cuong Trinh' offical-nginx-dev do180/mynginx:v1.0-SANPSHOT 
+Error: you must provide a container name or ID and a target image name
+[student@workstation ~]$ podman commit -m -a 'Cuong Trinh' offical-nginx do180/mynginx:v1.0-SANPSHOT 
+Error: you must provide a container name or ID and a target image name
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED         SIZE
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/nginx                      1.17     9beeba249f3e   23 months ago   131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED      STATUS          PORTS                    NAMES
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  6 hours ago  Up 6 hours ago  0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ podman ps-a
+Error: unrecognized command `podman ps-a`
+Try 'podman --help' for more information.
+[student@workstation ~]$ pdodman ps -a
+bash: pdodman: command not found...
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS                    PORTS                    NAMES
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  11 minutes ago  Exited (0) 8 minutes ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            6 hours ago     Up 6 hours ago            0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman stop offical-nginx
+f52742a81b244464b9e2914d776b9da94ee72331dd09fe2e4fd8259eeca8a0c6
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -m -a 'Cuong Trinh' offical-nginx do180/mynginx:v1.0-SANPSHOT 
+Error: you must provide a container name or ID and a target image name
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -a 'Cuong Trinh' offical-nginx do180/mynginx:v1.0-SANPSHOT 
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob 799cd5ca6e0b done
+Copying config 12b8ba25a1 done
+Writing manifest to image destination
+Storing signatures
+12b8ba25a1c6e56f79a22d9d26c82402efac371287c9cf14d1a860a3cd34cefd
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx                           v1.0-SANPSHOT   12b8ba25a1c6   17 seconds ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest          0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest          e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   23 months ago    131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -a 'Cuong Trinh' offical-nginx do180/mynginx:v1.0-SNAPSHOT 
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob 799cd5ca6e0b skipped: already exists
+Copying config 4a3094a55b done
+Writing manifest to image destination
+Storing signatures
+4a3094a55b547e68566732f6c8e464a64eda96e050035bc934cf0d4956924b75
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman rmi localhost/do180/mynginx:v1.0-SANPSHOT
+Untagged: localhost/do180/mynginx:v1.0-SANPSHOT
+Deleted: 12b8ba25a1c6e56f79a22d9d26c82402efac371287c9cf14d1a860a3cd34cefd
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx                           v1.0-SNAPSHOT   4a3094a55b54   36 seconds ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest          0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest          e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   23 months ago    131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run -d --name official-nginx-dev -p 8080:80 localhost/do180/mynginx:v1.0-SNAPSHOT 
+0f009f9dae5f1655476c31972d03758fa33080ec73f72862d785fd0eb0a01532
+[student@workstation ~]$ 
+[student@workstation ~]$ curl localhost/
+curl: (7) Failed to connect to localhost port 80: Connection refused
+[student@workstation ~]$ curl localhost:8080
+DO180
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman exec -it official-nginx-dev /bin/bash
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# cat /usr/share/nginx/html/index.html 
+DO180
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# echo "DO180 Page" > /usr/share/nginx/html/index.html 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# 
+root@0f009f9dae5f:/# exit
+exit
+[student@workstation ~]$ curl localhost:8080
+DO180 Page
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED        STATUS            PORTS                    NAMES
+0f009f9dae5f  localhost/do180/mynginx:v1.0-SNAPSHOT                   nginx -g daemon o...  2 minutes ago  Up 2 minutes ago  0.0.0.0:8080->80/tcp     official-nginx-dev
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            7 hours ago    Up 7 hours ago    0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman stop official-nginx-dev 
+0f009f9dae5f1655476c31972d03758fa33080ec73f72862d785fd0eb0a01532
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman commit -a "Cuong Trinh" official-nginx-dev do180/mynginx:v1.0
+Getting image source signatures
+Copying blob ffc9b21953f4 skipped: already exists
+Copying blob 2f4accd375d9 skipped: already exists
+Copying blob 6c7de695ede3 skipped: already exists
+Copying blob 799cd5ca6e0b skipped: already exists
+Copying blob ae268883d659 done
+Copying config 62db453cf5 done
+Writing manifest to image destination
+Storing signatures
+62db453cf51e161a68cb96d339eda9097528a7f5f6b9bce9aabbdd5927facb26
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED         SIZE
+localhost/do180/mynginx                           v1.0            62db453cf51e   7 seconds ago   131 MB
+localhost/do180/mynginx                           v1.0-SNAPSHOT   4a3094a55b54   6 minutes ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest          0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest          e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   23 months ago   131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman rmi localhost/do180/mynginx:v1.0-SNAPSHOT
+Error: could not remove image 4a3094a55b547e68566732f6c8e464a64eda96e050035bc934cf0d4956924b75 as it is being used by 1 containers
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps .a
+Error: `podman ps` takes no arguments
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS                     PORTS                    NAMES
+0f009f9dae5f  localhost/do180/mynginx:v1.0-SNAPSHOT                   nginx -g daemon o...  5 minutes ago   Exited (0) 2 minutes ago   0.0.0.0:8080->80/tcp     official-nginx-dev
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  23 minutes ago  Exited (0) 20 minutes ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            7 hours ago     Up 7 hours ago             0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman rm official-nginx-dev
+0f009f9dae5f1655476c31972d03758fa33080ec73f72862d785fd0eb0a01532
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS                     PORTS                    NAMES
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  23 minutes ago  Exited (0) 20 minutes ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            7 hours ago     Up 7 hours ago             0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman run --name my-nginx -d -p 8280:80 
+localhost/do180/mynginx                                 quay.io/redhattraining/nginx                            registry.access.redhat.com/rhscl/httpd-24-rhel7:latest
+localhost/do180/mynginx:v1.0                            quay.io/redhattraining/nginx:1.17                       registry.access.redhat.com/rhscl/mysql-80-rhel7
+localhost/do180/mynginx:v1.0-SNAPSHOT                   registry.access.redhat.com/rhscl/httpd-24-rhel7         registry.access.redhat.com/rhscl/mysql-80-rhel7:latest
+[student@workstation ~]$ podman run --name my-nginx -d -p 8280:80 
+localhost/do180/mynginx                                 quay.io/redhattraining/nginx                            registry.access.redhat.com/rhscl/httpd-24-rhel7:latest
+localhost/do180/mynginx:v1.0                            quay.io/redhattraining/nginx:1.17                       registry.access.redhat.com/rhscl/mysql-80-rhel7
+localhost/do180/mynginx:v1.0-SNAPSHOT                   registry.access.redhat.com/rhscl/httpd-24-rhel7         registry.access.redhat.com/rhscl/mysql-80-rhel7:latest
+[student@workstation ~]$ podman run --name my-nginx -d -p 8280:80 localhost/do180/mynginx:v1.0
+2d41f2bac9f29b0f9742d0cdefd655453411638ccec92034bddc385591c01dd1
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG             IMAGE ID       CREATED          SIZE
+localhost/do180/mynginx                           v1.0            62db453cf51e   4 minutes ago    131 MB
+localhost/do180/mynginx                           v1.0-SNAPSHOT   4a3094a55b54   10 minutes ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest          0d2610b0b8d4   5 weeks ago      507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest          e2dcf2e646e6   5 weeks ago      329 MB
+quay.io/redhattraining/nginx                      1.17            9beeba249f3e   23 months ago    131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman rmi localhost/do180/mynginx:v1.0-SNAPSHOT 
+Untagged: localhost/do180/mynginx:v1.0-SNAPSHOT
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED         SIZE
+localhost/do180/mynginx                           v1.0     62db453cf51e   4 minutes ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/nginx                      1.17     9beeba249f3e   23 months ago   131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND               CREATED         STATUS                     PORTS                    NAMES
+2d41f2bac9f2  localhost/do180/mynginx:v1.0                            nginx -g daemon o...  47 seconds ago  Up 46 seconds ago          0.0.0.0:8280->80/tcp     my-nginx
+f52742a81b24  quay.io/redhattraining/nginx:1.17                       nginx -g daemon o...  27 minutes ago  Exited (0) 23 minutes ago  0.0.0.0:8080->80/tcp     offical-nginx
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld            7 hours ago     Up 7 hours ago             0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ curl localhost:8280
+DO180 Page
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ lab image-review grade
+
+Grading the student's work for the Lab: Managing Images
+
+ · Nginx container image is pulled.............................  PASS
+ · Container official-nginx is created.........................  FAIL
+ · Container official-nginx is stopped.........................  PASS
+ · Tag do180/mynginx:v1.0-SNAPSHOT is removed..................  PASS
+ · Tag do180/mynginx:v1.0 is created...........................  PASS
+ · Container my-nginx is created and running...................  PASS
+ · index.html is available with the custom content.............  PASS
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ lab image-review grade
+
+Grading the student's work for the Lab: Managing Images
+
+ · Nginx container image is pulled.............................  PASS
+ · Container official-nginx is created.........................  FAIL
+ · Container official-nginx is stopped.........................  PASS
+ · Tag do180/mynginx:v1.0-SNAPSHOT is removed..................  PASS
+ · Tag do180/mynginx:v1.0 is created...........................  PASS
+ · Container my-nginx is created and running...................  PASS
+ · index.html is available with the custom content.............  PASS
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED         SIZE
+localhost/do180/mynginx                           v1.0     62db453cf51e   5 minutes ago   131 MB
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago     507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago     329 MB
+quay.io/redhattraining/nginx                      1.17     9beeba249f3e   23 months ago   131 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ lab image-review finish
+
+Completing the Lab: Managing Images
+
+ · Stopping official-nginx-dev container.......................  SUCCESS
+ · Removing official-nginx-dev container.......................  SUCCESS
+ · Stopping official-nginx container...........................  SUCCESS
+ · Removing official-nginx container...........................  SUCCESS
+ · Removing do180/mynginx:v1.0 image...........................  SUCCESS
+ · Removing quay.io/redhattraining/nginx:1.17 image............  SUCCESS
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman images
+REPOSITORY                                        TAG      IMAGE ID       CREATED       SIZE
+registry.access.redhat.com/rhscl/mysql-80-rhel7   latest   0d2610b0b8d4   5 weeks ago   507 MB
+registry.access.redhat.com/rhscl/httpd-24-rhel7   latest   e2dcf2e646e6   5 weeks ago   329 MB
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+[student@workstation ~]$ podman ps -a
+CONTAINER ID  IMAGE                                                   COMMAND     CREATED      STATUS          PORTS                    NAMES
+8390c4bccfe7  registry.access.redhat.com/rhscl/mysql-80-rhel7:latest  run-mysqld  7 hours ago  Up 7 hours ago  0.0.0.0:13306->3306/tcp  mysql-2
+[student@workstation ~]$ 
+[student@workstation ~]$ 
+
+
